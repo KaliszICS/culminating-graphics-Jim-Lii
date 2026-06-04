@@ -10,6 +10,7 @@ import javafx.scene.text.Font;
 import javafx.scene.paint.Color;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Spinner;
+import javafx.scene.layout.GridPane;
 
 public class HelloFX extends Application {
 
@@ -26,8 +27,8 @@ public class HelloFX extends Application {
         text.setText(text.getText() + "Number of mines surrounding a tile: 0 to 8\n");
         text.setText(text.getText() + "Flag: F\nMine: M\nUnrevealed: ?\nIncorrect Flag: X\n\n");
         text.setText(text.getText() + "--- Actions ---\n");
-        text.setText(text.getText() + "r [integer] [integer] - Reveals the tile at (x, y)\n");
-        text.setText(text.getText() + "f [integer] [integer] - Flags the tile at (x, y)\n");
+        text.setText(text.getText() + "left click - Reveals the tile\n");
+        text.setText(text.getText() + "right click - Flags the tile\n");
         StackPane menu = new StackPane(); //make menu
         Button button = new Button("Proceed"); //button to finish reading text
         Button button2 = new Button("Submit"); //button to submit width height and mines
@@ -53,6 +54,7 @@ public class HelloFX extends Application {
         StackPane.setMargin(heightSpinner, new Insets(220, 100, 260, 300));
         //mines
         TextField minesField = new TextField();
+        minesField.setText("1");
         menu.getChildren().add(minesField);
         StackPane.setMargin(minesField, new Insets(245, 160, 235, 335));
         minesField.textProperty().addListener((obs, oldVal, newVal) -> { //stops user from entering non-numbers
@@ -73,10 +75,10 @@ public class HelloFX extends Application {
         menu.getChildren().add(text2);
         text2.setAlignment(Pos.BOTTOM_CENTER);
 
-        //*start the scene*
-        Scene scene = new Scene(menu, 640, 480); 
+        //*start the menu scene*
+        Scene menuScene = new Scene(menu, 640, 480); 
         stage.setTitle("Minesweeper");
-        stage.setScene(scene);
+        stage.setScene(menuScene);
         stage.show();
 
         //button lets user proceed from instructions
@@ -106,16 +108,37 @@ public class HelloFX extends Application {
                 text.setVisible(false);
                 text2.setVisible(false);
                 button2.setVisible(false);
+                int width = widthSpinner.getValue();
+                int height = heightSpinner.getValue();
+                int mines = Integer.parseInt(minesField.getText());
+                startGame(stage, width, height, mines);
             }
         });
-        //int width = widthSpinner.getValue();
-        //int height = heightSpinner.getValue();
-        //int mines = Integer.parseInt(minesField.getText());
+    }
 
-        //input size and # of mines
+    public void startGame(Stage stage, int width, int height, int mines){
+        //mine grid with button array (not to be confused with minesField)
+        GridPane grid = new GridPane();
+        StackPane game = new StackPane();
+        StackPane.setMargin(grid, new Insets(20, 20, 20, 20));
+        Button[][] tiles = new Button[height][width]; //button array
+        for (int row = 0; row < height; row++){
+            for (int col = 0; col < width; col++){
+                Button tile = new Button();
+                tile.setPrefSize(25, 25);
+                tile.setFocusTraversable(false);
+                tile.setOnAction(e -> {
+                    //sjbhfbjfew
+                });
+                tiles[row][col] = tile;
+                grid.add(tile, col, row);
+            }
+        }
 
-
-        button.setText("Proceed");
+        //*start game scene*
+        game.getChildren().add(grid);
+        Scene gameScene = new Scene(game, width * 25 + 40, height * 25 + 40); 
+        stage.setScene(gameScene);
     }
 
     public static void main(String[] args) {
