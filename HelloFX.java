@@ -1,3 +1,10 @@
+/*
+Title: Minesweeper - Graphic Culminating Assignment
+Author: Jim Li
+Date Created: Jun 2, 2026
+Date Last Modified: Jun 5, 2026
+ */
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -11,58 +18,90 @@ import javafx.scene.paint.Color;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Spinner;
 import javafx.scene.layout.GridPane;
+import javafx.scene.input.MouseButton;
 
 public class HelloFX extends Application {
+    //game variables, public because they go through methods a lot
+    public int width;
+    public int height;
+    public int mines;
+
+    public int[][] board;
+    public boolean[][] revealed;
+    public boolean[][] flagged;
+
+    public Button[][] tiles;
 
     @Override
     public void start(Stage stage) {
-        //*instructions menu*
-        //construct main text
-        Label text = new Label("Welcome to Minesweeper!\n");
-        text.setText(text.getText() + "You will be given a board full of square tiles to be revealed.\n");
-        text.setText(text.getText() + "Each tile can randomly contain a mine.\n");
-        text.setText(text.getText() + "Completely reveal the board without hitting a mine to win.\n");
-        text.setText(text.getText() + "If you hit a mine, you lose. Mines are revealed at the end.\n\n");
-        text.setText(text.getText() + "--- Symbols ---\n");
-        text.setText(text.getText() + "Number of mines surrounding a tile: 0 to 8\n");
-        text.setText(text.getText() + "Flag: F\nMine: M\nUnrevealed: ?\nIncorrect Flag: X\n\n");
-        text.setText(text.getText() + "--- Actions ---\n");
-        text.setText(text.getText() + "left click - Reveals the tile\n");
-        text.setText(text.getText() + "right click - Flags the tile\n");
-        StackPane menu = new StackPane(); //make menu
-        Button button = new Button("Proceed"); //button to finish reading text
-        Button button2 = new Button("Submit"); //button to submit width height and mines
-        button2.setVisible(false);
+        
+        //create the menu and set as scene
+        StackPane menu = createMenu(stage);
+        Scene menuScene = new Scene(menu, 640, 480); 
+        stage.setTitle("Minesweeper");
+        stage.setScene(menuScene);
+        stage.show();
+    }
 
-        menu.getChildren().add(text); //add text
-        menu.getChildren().add(button); //add button
-        menu.getChildren().add(button2); //add button 2
+    public void startGame(Stage stage){
+        //create the game and set as scene
+        StackPane game = createGame(stage);
+        Scene gameScene = new Scene(game, width * 25 + 40, height * 25 + 40); 
+        stage.setScene(gameScene);
+    }
+
+    //method constructs the menu
+    public StackPane createMenu(Stage stage){
+        StackPane menu = new StackPane(); //initialise the stackpane
+
+        //construct and add main text
+        Label text = new Label("Welcome to Minesweeper!\n" +
+        "You will be given a board full of square tiles to be revealed.\n" +
+        "Each tile can randomly contain a mine.\n" +
+        "Completely reveal the board without hitting a mine to win.\n" +
+        "If you hit a mine, you lose. Mines are revealed at the end.\n\n" +
+        "--- Symbols ---\n" +
+        "Number of mines surrounding a tile: 0 to 8\n" +
+        "Flag: F\nMine: M\nUnrevealed: ?\nIncorrect Flag: X\n\n" +
+        "--- Actions ---\n" +
+        "left click - Reveals the tile\n" +
+        "right click - Flags the tile\n");
         text.setFont(new Font("Arial", 20)); //set font and size for main text
-        StackPane.setMargin(button, new Insets(20, 20, 20, 20)); //button margins
-        StackPane.setAlignment(button, Pos.BOTTOM_RIGHT); //align button
-        StackPane.setMargin(button2, new Insets(20, 20, 20, 20)); //button margins 2
-        StackPane.setAlignment(button2, Pos.BOTTOM_RIGHT); //align button 2
 
-        //number input stuff
-        //width
+        //make 2 buttons to get through menu
+        //proceed button (for proceeding after reading instructions)
+        Button proceedButton = new Button("Proceed");
+        StackPane.setMargin(proceedButton, new Insets(20, 20, 20, 20)); //margins
+        StackPane.setAlignment(proceedButton, Pos.BOTTOM_RIGHT); //align
+
+        //submit button (for submitting grid dimensions and mines)
+        Button submitButton = new Button("Submit"); //button to submit width height and mines
+        submitButton.setVisible(false);
+        StackPane.setMargin(proceedButton, new Insets(20, 20, 20, 20)); //proceed margins
+        StackPane.setAlignment(proceedButton, Pos.BOTTOM_RIGHT); //align button
+        StackPane.setMargin(submitButton, new Insets(20, 20, 20, 20)); //submit margins
+        StackPane.setAlignment(submitButton, Pos.BOTTOM_RIGHT); //align button
+
+        //number inputs and their position
+        //width (spinner between 4 and 40)
         Spinner<Integer> widthSpinner = new Spinner<>(4, 40, 4);
-        menu.getChildren().add(widthSpinner);
         StackPane.setMargin(widthSpinner, new Insets(195, 100, 285, 300));
-        //height
+
+        //height (spinner between 4 and 40)
         Spinner<Integer> heightSpinner = new Spinner<>(4, 40, 4);
-        menu.getChildren().add(heightSpinner);
         StackPane.setMargin(heightSpinner, new Insets(220, 100, 260, 300));
-        //mines
+
+        //mines (positive integer only)
         TextField minesField = new TextField();
         minesField.setText("1");
-        menu.getChildren().add(minesField);
         StackPane.setMargin(minesField, new Insets(245, 160, 235, 335));
-        minesField.textProperty().addListener((obs, oldVal, newVal) -> { //stops user from entering non-numbers
+        //listener stops user from entering non-numbers
+        minesField.textProperty().addListener((obs, oldVal, newVal) -> {
         if (!newVal.matches("[0-9]+")) {
            minesField.setText(newVal.replaceAll("[^0-9]+", ""));
         }
         });
-
+        //hide stuff for now
         widthSpinner.setVisible(false);
         heightSpinner.setVisible(false);
         minesField.setVisible(false);
@@ -72,29 +111,22 @@ public class HelloFX extends Application {
         text2.setTextFill(Color.RED);
         text2.setFont(new Font("Arial", 15));
         StackPane.setMargin(text2, new Insets(20, 20, 20, 20));
-        menu.getChildren().add(text2);
         text2.setAlignment(Pos.BOTTOM_CENTER);
 
-        //*start the menu scene*
-        Scene menuScene = new Scene(menu, 640, 480); 
-        stage.setTitle("Minesweeper");
-        stage.setScene(menuScene);
-        stage.show();
-
-        //button lets user proceed from instructions
-        button.setOnAction(e -> {
+        //set proceed button actions
+        proceedButton.setOnAction(e -> {
             text.setText("Input width (4 to 40):\nInput height (4 to 40):\n");
             text.setText(text.getText() + "Input mines:\n(minimum 1, max \n# of tiles - 9)");
             StackPane.setMargin(text, new Insets(180, 315, 180, 100));
             widthSpinner.setVisible(true);
             heightSpinner.setVisible(true);
             minesField.setVisible(true);
-            button.setVisible(false);
-            button2.setVisible(true);
+            proceedButton.setVisible(false);
+            submitButton.setVisible(true);
         });
-        
-        //button submits values
-        button2.setOnAction(e -> {
+
+        //set submit button actions
+        submitButton.setOnAction(e -> {
             if (minesField.getText().isEmpty()){
                 text2.setText("Something's missing!");
             } else if (Integer.parseInt(minesField.getText()) < 1){
@@ -107,42 +139,61 @@ public class HelloFX extends Application {
                 minesField.setVisible(false);
                 text.setVisible(false);
                 text2.setVisible(false);
-                button2.setVisible(false);
-                int width = widthSpinner.getValue();
-                int height = heightSpinner.getValue();
-                int mines = Integer.parseInt(minesField.getText());
-                startGame(stage, width, height, mines);
+                submitButton.setVisible(false);
+                width = widthSpinner.getValue();
+                height = heightSpinner.getValue();
+                mines = Integer.parseInt(minesField.getText());
+                startGame(stage);
             }
         });
+        //add everything
+        menu.getChildren().addAll(text, proceedButton, submitButton,
+            widthSpinner, heightSpinner, minesField, text2
+        );
+        return menu;
     }
 
-    public void startGame(Stage stage, int width, int height, int mines){
-        //mine grid with button array (not to be confused with minesField)
+    public StackPane createGame(Stage stage){
+        StackPane game = new StackPane(); //initialise the stackpane
+        //create grid for the mine board
         GridPane grid = new GridPane();
-        StackPane game = new StackPane();
-        StackPane.setMargin(grid, new Insets(20, 20, 20, 20));
-        Button[][] tiles = new Button[height][width]; //button array
-        for (int row = 0; row < height; row++){
-            for (int col = 0; col < width; col++){
+        StackPane.setMargin(grid, new Insets(20, 20, 20, 20)); //margin
+
+        //create button array for the grid
+        tiles = new Button[height][width]; //button array
+        for (int i = 0; i < height; i++){
+            for (int j = 0; j < width; j++){
+                int row = i;
+                int col = j;
                 Button tile = new Button();
                 tile.setPrefSize(25, 25);
                 tile.setFocusTraversable(false);
-                tile.setOnAction(e -> {
-                    //sjbhfbjfew
+                tile.setOnMouseClicked(e -> {
+                    if (e.getButton() == MouseButton.PRIMARY){
+                        reveal(row, col);
+                    }
+                    else if (e.getButton() == MouseButton.SECONDARY){
+                        flag(row, col);
+                    }
                 });
                 tiles[row][col] = tile;
                 grid.add(tile, col, row);
             }
         }
+        return game;
+    }
 
-        //*start game scene*
-        game.getChildren().add(grid);
-        Scene gameScene = new Scene(game, width * 25 + 40, height * 25 + 40); 
-        stage.setScene(gameScene);
+    //method reveals tile
+    public static void reveal(int row, int col){
+
+    }
+
+    //method toggles flag on the tile
+    public static void flag(int row, int col){
+
     }
 
     public static void main(String[] args) {
         launch();
     }
-
 }
