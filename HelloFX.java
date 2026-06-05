@@ -46,7 +46,7 @@ public class HelloFX extends Application {
     public void startGame(Stage stage){
         //create the game and set as scene
         StackPane game = createGame(stage);
-        Scene gameScene = new Scene(game, width * 25 + 40, height * 25 + 40); 
+        Scene gameScene = new Scene(game, width * 25 + 40, height * 25 + 75); 
         stage.setScene(gameScene);
     }
 
@@ -84,16 +84,16 @@ public class HelloFX extends Application {
 
         //number inputs and their position
         //width (spinner between 4 and 40)
-        Spinner<Integer> widthSpinner = new Spinner<>(4, 40, 4);
+        Spinner<Integer> widthSpinner = new Spinner<>(4, 40, 10);
         StackPane.setMargin(widthSpinner, new Insets(195, 100, 285, 300));
 
         //height (spinner between 4 and 40)
-        Spinner<Integer> heightSpinner = new Spinner<>(4, 40, 4);
+        Spinner<Integer> heightSpinner = new Spinner<>(4, 40, 10);
         StackPane.setMargin(heightSpinner, new Insets(220, 100, 260, 300));
 
         //mines (positive integer only)
         TextField minesField = new TextField();
-        minesField.setText("1");
+        minesField.setText("10"); //10 mine default
         StackPane.setMargin(minesField, new Insets(245, 160, 235, 335));
         //listener stops user from entering non-numbers
         minesField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -110,8 +110,8 @@ public class HelloFX extends Application {
         Label text2 = new Label();
         text2.setTextFill(Color.RED);
         text2.setFont(new Font("Arial", 15));
-        StackPane.setMargin(text2, new Insets(20, 20, 20, 20));
-        text2.setAlignment(Pos.BOTTOM_CENTER);
+        StackPane.setMargin(text2, new Insets(230, 140, 150, 310));
+        StackPane.setAlignment(text2, Pos.CENTER);
 
         //set proceed button actions
         proceedButton.setOnAction(e -> {
@@ -157,7 +157,13 @@ public class HelloFX extends Application {
         StackPane game = new StackPane(); //initialise the stackpane
         //create grid for the mine board
         GridPane grid = new GridPane();
-        StackPane.setMargin(grid, new Insets(20, 20, 20, 20)); //margin
+        StackPane.setMargin(grid, new Insets(55, 20, 20, 20)); //margin
+
+        //create text for messages and stuff
+        Label text = new Label("Click any tile to begin");
+        text.setFont(new Font("Arial", 15));
+        StackPane.setMargin(text, new Insets(20, 20, 20, 20));
+        StackPane.setAlignment(text, Pos.TOP_LEFT);
 
         //create button array for the grid
         tiles = new Button[height][width]; //button array
@@ -165,7 +171,7 @@ public class HelloFX extends Application {
             for (int j = 0; j < width; j++){
                 int row = i;
                 int col = j;
-                Button tile = new Button();
+                Button tile = new Button("?");
                 tile.setPrefSize(25, 25);
                 tile.setFocusTraversable(false);
                 tile.setOnMouseClicked(e -> {
@@ -180,7 +186,7 @@ public class HelloFX extends Application {
                 grid.add(tile, col, row);
             }
         }
-        game.getChildren().add(grid);
+        game.getChildren().addAll(grid, text);
         return game;
     }
 
