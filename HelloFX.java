@@ -180,6 +180,7 @@ public class HelloFX extends Application {
                 grid.add(tile, col, row);
             }
         }
+        game.getChildren().add(grid);
         return game;
     }
 
