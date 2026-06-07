@@ -2,8 +2,10 @@
 Title: Minesweeper - Graphic Culminating Assignment
 Author: Jim Li
 Date Created: Jun 2, 2026
-Date Last Modified: Jun 5, 2026
+Date Last Modified: Jun 7, 2026
  */
+
+import java.util.Random;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -22,17 +24,22 @@ import javafx.scene.input.MouseButton;
 
 public class HelloFX extends Application {
     //game variables, public because they go through methods a lot
-    public int width;
-    public int height;
-    public int mines;
+    //these are static because problems told me so
+    public static int width;
+    public static int height;
+    public static int mines;
 
-    public int[][] board;
-    public boolean[][] revealed;
-    public boolean[][] flagged;
+    public static char[][] board;
+    public static boolean firstReveal = true;
+    public static boolean[][] revealed;
+    public static boolean[][] flagged;
+    public static int flags = 0;
+    public static Button[][] tiles;
 
-    public Button[][] tiles;
+    public static Label text3;
 
     @Override
+    //start menu
     public void start(Stage stage) {
         
         //create the menu and set as scene
@@ -43,10 +50,11 @@ public class HelloFX extends Application {
         stage.show();
     }
 
+    //start game
     public void startGame(Stage stage){
         //create the game and set as scene
         StackPane game = createGame(stage);
-        Scene gameScene = new Scene(game, width * 25 + 40, height * 25 + 75); 
+        Scene gameScene = new Scene(game, width * 30 + 40, height * 30 + 75); 
         stage.setScene(gameScene);
     }
 
@@ -143,6 +151,9 @@ public class HelloFX extends Application {
                 width = widthSpinner.getValue();
                 height = heightSpinner.getValue();
                 mines = Integer.parseInt(minesField.getText());
+                //define the revealed and flagged arrays
+                revealed = new boolean[height][width];
+                flagged = new boolean[height][width];
                 startGame(stage);
             }
         });
@@ -155,15 +166,16 @@ public class HelloFX extends Application {
 
     public StackPane createGame(Stage stage){
         StackPane game = new StackPane(); //initialise the stackpane
+
         //create grid for the mine board
         GridPane grid = new GridPane();
         StackPane.setMargin(grid, new Insets(55, 20, 20, 20)); //margin
 
         //create text for messages and stuff
-        Label text = new Label("Click any tile to begin");
-        text.setFont(new Font("Arial", 15));
-        StackPane.setMargin(text, new Insets(20, 20, 20, 20));
-        StackPane.setAlignment(text, Pos.TOP_LEFT);
+        text3 = new Label("Click any tile to begin");
+        text3.setFont(new Font("Arial", 15));
+        StackPane.setMargin(text3, new Insets(20, 20, 20, 20));
+        StackPane.setAlignment(text3, Pos.TOP_LEFT);
 
         //create button array for the grid
         tiles = new Button[height][width]; //button array
@@ -172,7 +184,11 @@ public class HelloFX extends Application {
                 int row = i;
                 int col = j;
                 Button tile = new Button("?");
-                tile.setPrefSize(25, 25);
+                tile.setFont(new Font("Arial", 20));
+                tile.setPrefSize(30, 30);
+                tile.setMinSize(30, 30);
+                tile.setMaxSize(30, 30);
+                tile.setStyle("-fx-padding: 0;");
                 tile.setFocusTraversable(false);
                 tile.setOnMouseClicked(e -> {
                     if (e.getButton() == MouseButton.PRIMARY){
@@ -186,18 +202,113 @@ public class HelloFX extends Application {
                 grid.add(tile, col, row);
             }
         }
-        game.getChildren().addAll(grid, text);
+        game.getChildren().addAll(grid, text3);
         return game;
     }
 
     //method reveals tile
     public static void reveal(int row, int col){
+        if (revealed[row][col] || flagged[row][col]){ //do nothing if already revealed
+            return;
+        }
+        if (firstReveal){
+            generateBoard(row, col);
+            firstReveal = false;
+            text3.setText("Flags left: " + (mines - flags));
+        }
+        revealed[row][col] = true;
+        tiles[row][col].setText("" + board[row][col]);
 
+        //automatic clearing
+        if (board[row][col] == '0'){
+            //
+        }
+
+        //lose
+        if (board[row][col] == 'M'){
+            //
+        }
+    }
+
+    //method generates board (I basically copied this from my text version)
+    public static void generateBoard(int startY, int startX){
+		//initalise random and define boundaries for all arrays (except button)
+		Random random = new Random();
+        board = new char[height][width];
+
+		//create the board
+		for (int i = 0; i < height; i++){
+			for (int j = 0; j < width; j++){
+				board[i][j] = '0';
+			}
+		}
+		int placedMines = 0;
+		while (placedMines < mines){ //go until mines reaches target
+			int ranX = random.nextInt(width); //random position generation
+			int ranY = random.nextInt(height);
+			//logic that prevents mines in starting position and repeating mine spawns
+			if ((ranY < startY - 1 || ranY > startY + 1 || ranX < startX - 1 || ranX > startX + 1) && board[ranY][ranX] != 'M'){
+				board[ranY][ranX] = 'M';
+				placedMines++;
+			}
+		}
+        //number generation
+		for (int i = 0; i < height; i++){
+			for (int j = 0; j < width; j++){
+				board[i][j] = findMines(i, j);
+			}
+		}
+    }
+
+    //method counts numbers of mines surrounding a non-mine tile (for generateBoard())
+	public static char findMines(int row, int col){
+		if (board[row][col] == '0'){ //if selected tile is 0
+			char counter = '0';
+			//first if: checks if index is out of bounds
+			//second if: checks if index is a mine
+			if (row - 1 > -1 && col - 1 > -1 && board[row-1][col-1] == 'M'){ //up left
+				counter++;
+			}
+			if (row - 1 > -1 && board[row-1][col] == 'M'){ //up
+				counter++;
+			}
+			if (row - 1 > -1 && col + 1 < width && board[row-1][col+1] == 'M'){ //up right
+				counter++;
+			}
+			if (col + 1 < width && board[row][col+1] == 'M'){ //right
+				counter++;
+			}
+			if (row + 1 < height && col + 1 < width && board[row+1][col+1] == 'M'){ //down right
+				counter++;
+			}
+			if (row + 1 < height && board[row+1][col] == 'M'){ //down
+				counter++;
+			}
+			if (row + 1 < height && col - 1 > -1 && board[row+1][col-1] == 'M'){ //down left
+				counter++;
+			}
+			if (col - 1 > -1 && board[row][col-1] == 'M'){ //left
+				counter++;
+			}
+			return counter;
+		}
+		return 'M'; //if it's a mine
     }
 
     //method toggles flag on the tile
     public static void flag(int row, int col){
-
+        if (!flagged[row][col]){
+            tiles[row][col].setText("F");
+            flags++;
+            text3.setText("Flags left: " + (mines - flags));
+            flagged[row][col] = true;
+        }
+        else if (flagged[row][col]){
+            tiles[row][col].setText("?");
+            flags--;
+            text3.setText("Flags left: " + (mines - flags));
+            flagged[row][col] = false;
+        }
     }
 
     public static void main(String[] args) {
