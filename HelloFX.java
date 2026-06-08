@@ -2,7 +2,7 @@
 Title: Minesweeper - Graphic Culminating Assignment
 Author: Jim Li
 Date Created: Jun 2, 2026
-Date Last Modified: Jun 7, 2026
+Date Last Modified: Jun 8, 2026
  */
 
 import java.util.Random;
@@ -34,6 +34,7 @@ public class HelloFX extends Application {
     public static boolean[][] revealed;
     public static boolean[][] flagged;
     public static int flags = 0;
+    public static int revealedTiles;
     public static Button[][] tiles;
 
     public static Label text3;
@@ -54,34 +55,38 @@ public class HelloFX extends Application {
     public void startGame(Stage stage){
         //create the game and set as scene
         StackPane game = createGame(stage);
-        Scene gameScene = new Scene(game, width * 30 + 40, height * 30 + 75); 
+        Scene gameScene = new Scene(game); 
         stage.setScene(gameScene);
+        stage.sizeToScene();
     }
 
     //method constructs the menu
     public StackPane createMenu(Stage stage){
         StackPane menu = new StackPane(); //initialise the stackpane
 
-        //construct and add main text
+        //construct main text
         Label text = new Label("Welcome to Minesweeper!\n" +
-        "You will be given a board full of square tiles to be revealed.\n" +
+        "The game is played on a rectangular board of square tiles.\n" +
         "Each tile can randomly contain a mine.\n" +
+        "(You will be able to choose board size and mines yourself)\n" +
         "Completely reveal the board without hitting a mine to win.\n" +
-        "If you hit a mine, you lose. Mines are revealed at the end.\n\n" +
+        "If you do hit a mine, you lose. Mines are revealed at the end.\n" +
+        "You can place flags to help you record suspected mines.\n\n"+
         "--- Symbols ---\n" +
         "Number of mines surrounding a tile: 0 to 8\n" +
+        "(0 will not be shown, for the sake of playability)\n" +
         "Flag: F\nMine: M\nUnrevealed: ?\nIncorrect Flag: X\n\n" +
         "--- Actions ---\n" +
-        "left click - Reveals the tile\n" +
-        "right click - Flags the tile\n");
-        text.setFont(new Font("Arial", 20)); //set font and size for main text
+        "Left Click - Reveals the tile\n" +
+        "Right Click - Flags the tile\n");
+        text.setFont(new Font("Arial", 19)); //set font and size for main text
 
         //make 2 buttons to get through menu
         //proceed button (for proceeding after reading instructions)
         Button proceedButton = new Button("Proceed");
         StackPane.setMargin(proceedButton, new Insets(20, 20, 20, 20)); //margins
         StackPane.setAlignment(proceedButton, Pos.BOTTOM_RIGHT); //align
-
+		
         //submit button (for submitting grid dimensions and mines)
         Button submitButton = new Button("Submit"); //button to submit width height and mines
         submitButton.setVisible(false);
@@ -92,18 +97,18 @@ public class HelloFX extends Application {
 
         //number inputs and their position
         //width (spinner between 4 and 40)
-        Spinner<Integer> widthSpinner = new Spinner<>(4, 40, 10);
+        Spinner<Integer> widthSpinner = new Spinner<>(4, 40, 10); //10 default
         StackPane.setMargin(widthSpinner, new Insets(195, 100, 285, 300));
 
         //height (spinner between 4 and 40)
-        Spinner<Integer> heightSpinner = new Spinner<>(4, 40, 10);
+        Spinner<Integer> heightSpinner = new Spinner<>(4, 40, 10); //10 default
         StackPane.setMargin(heightSpinner, new Insets(220, 100, 260, 300));
 
         //mines (positive integer only)
         TextField minesField = new TextField();
         minesField.setText("10"); //10 mine default
         StackPane.setMargin(minesField, new Insets(245, 160, 235, 335));
-        //listener stops user from entering non-numbers
+        //listener stops user from entering non-numbers into minesField
         minesField.textProperty().addListener((obs, oldVal, newVal) -> {
         if (!newVal.matches("[0-9]+")) {
            minesField.setText(newVal.replaceAll("[^0-9]+", ""));
@@ -114,7 +119,7 @@ public class HelloFX extends Application {
         heightSpinner.setVisible(false);
         minesField.setVisible(false);
 
-        //extra text thing that I will use for warnings/prompts
+        //extra text thing that I will use for warnings
         Label text2 = new Label();
         text2.setTextFill(Color.RED);
         text2.setFont(new Font("Arial", 15));
@@ -135,13 +140,14 @@ public class HelloFX extends Application {
 
         //set submit button actions
         submitButton.setOnAction(e -> {
+			//error messages
             if (minesField.getText().isEmpty()){
                 text2.setText("Something's missing!");
             } else if (Integer.parseInt(minesField.getText()) < 1){
                 text2.setText("Too little mines!");
             } else if (Integer.parseInt(minesField.getText()) > widthSpinner.getValue() * heightSpinner.getValue() - 9){
                 text2.setText("Too many mines!");
-            } else {
+            } else { //hide everything and get values
                 widthSpinner.setVisible(false);
                 heightSpinner.setVisible(false);
                 minesField.setVisible(false);
@@ -154,7 +160,7 @@ public class HelloFX extends Application {
                 //define the revealed and flagged arrays
                 revealed = new boolean[height][width];
                 flagged = new boolean[height][width];
-                startGame(stage);
+                startGame(stage); //make button start game scene
             }
         });
         //add everything
@@ -171,7 +177,7 @@ public class HelloFX extends Application {
         GridPane grid = new GridPane();
         StackPane.setMargin(grid, new Insets(55, 20, 20, 20)); //margin
 
-        //create text for messages and stuff
+        //create text for messages (# of flags, win/lose)
         text3 = new Label("Click any tile to begin");
         text3.setFont(new Font("Arial", 15));
         StackPane.setMargin(text3, new Insets(20, 20, 20, 20));
@@ -206,27 +212,53 @@ public class HelloFX extends Application {
         return game;
     }
 
-    //method reveals tile
+    //method reveals tile, along with automatic clearing and win/loss check
     public static void reveal(int row, int col){
-        if (revealed[row][col] || flagged[row][col]){ //do nothing if already revealed
-            return;
+        if (row < 0 || row >= height || col < 0 || col >= width){
+            return; //boundary check for automatic clearing
         }
+        if (revealed[row][col] || flagged[row][col]){
+            return; //do nothing if already revealed or flagged
+        }
+
+        //first reveal generates the board (can't start on a mine)
         if (firstReveal){
             generateBoard(row, col);
             firstReveal = false;
             text3.setText("Flags left: " + (mines - flags));
         }
-        revealed[row][col] = true;
-        tiles[row][col].setText("" + board[row][col]);
 
-        //automatic clearing
-        if (board[row][col] == '0'){
-            //
+        //check for loss
+        if (board[row][col] == 'M'){
+            endGame(false);
+            return; //so you can't win from revealing a mine
         }
 
-        //lose
-        if (board[row][col] == 'M'){
-            //
+        //reveal the tile and record it's revelation
+        revealed[row][col] = true;
+        revealedTiles++; //count revealed tiles
+        if (board[row][col] == '0'){ //if tile is 0, make it blank so easier to read board
+            tiles[row][col].setText("");
+        }
+        else {
+            tiles[row][col].setText("" + board[row][col]);
+        }
+
+        //automatic clearing through recursion
+        if (board[row][col] == '0'){
+            reveal(row - 1, col - 1); //up left
+            reveal(row - 1, col); //up
+            reveal(row - 1, col + 1); //up right
+            reveal(row, col + 1); //right
+            reveal(row + 1, col + 1); //down right
+            reveal(row + 1, col); //down
+            reveal(row + 1, col - 1); //down left
+            reveal(row, col - 1); //left
+        }
+
+        //check for win
+        if (revealedTiles == (width * height - mines)){
+            endGame(true);
         }
     }
 
@@ -297,17 +329,40 @@ public class HelloFX extends Application {
 
     //method toggles flag on the tile
     public static void flag(int row, int col){
+        if (revealed[row][col]){
+            return;
+        }
         if (!flagged[row][col]){
             tiles[row][col].setText("F");
             flags++;
             text3.setText("Flags left: " + (mines - flags));
             flagged[row][col] = true;
         }
-        else if (flagged[row][col]){
+        else {
             tiles[row][col].setText("?");
             flags--;
             text3.setText("Flags left: " + (mines - flags));
             flagged[row][col] = false;
+        }
+    }
+
+    //method for when game ends 
+    public static void endGame(boolean win){
+        //reveal mines
+        for (int row = 0; row < height; row++){
+            for (int col = 0; col < width; col++){
+                if (board[row][col] == 'M'){
+                    tiles[row][col].setText("M");
+                }
+            }
+        }
+
+        //change text based on win or loss
+        if (win){
+            text3.setText("You win!");
+        }
+        else {
+            text3.setText("You lose!");
         }
     }
 
