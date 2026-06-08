@@ -41,8 +41,7 @@ public class HelloFX extends Application {
 
     @Override
     //start menu
-    public void start(Stage stage) {
-        
+    public void start(Stage stage) {   
         //create the menu and set as scene
         StackPane menu = createMenu(stage);
         Scene menuScene = new Scene(menu, 640, 480); 
@@ -147,13 +146,7 @@ public class HelloFX extends Application {
                 text2.setText("Too little mines!");
             } else if (Integer.parseInt(minesField.getText()) > widthSpinner.getValue() * heightSpinner.getValue() - 9){
                 text2.setText("Too many mines!");
-            } else { //hide everything and get values
-                widthSpinner.setVisible(false);
-                heightSpinner.setVisible(false);
-                minesField.setVisible(false);
-                text.setVisible(false);
-                text2.setVisible(false);
-                submitButton.setVisible(false);
+            } else { //get values, hide menu, start game
                 width = widthSpinner.getValue();
                 height = heightSpinner.getValue();
                 mines = Integer.parseInt(minesField.getText());
@@ -190,17 +183,17 @@ public class HelloFX extends Application {
                 int row = i;
                 int col = j;
                 Button tile = new Button("?");
-                tile.setFont(new Font("Arial", 20));
+                tile.setFont(new Font("Arial", 20)); //button style
                 tile.setPrefSize(30, 30);
                 tile.setMinSize(30, 30);
                 tile.setMaxSize(30, 30);
                 tile.setStyle("-fx-padding: 0;");
                 tile.setFocusTraversable(false);
                 tile.setOnMouseClicked(e -> {
-                    if (e.getButton() == MouseButton.PRIMARY){
+                    if (e.getButton() == MouseButton.PRIMARY){ //left click
                         reveal(row, col);
                     }
-                    else if (e.getButton() == MouseButton.SECONDARY){
+                    else if (e.getButton() == MouseButton.SECONDARY){ //right click
                         flag(row, col);
                     }
                 });
@@ -264,7 +257,7 @@ public class HelloFX extends Application {
 
     //method generates board (I basically copied this from my text version)
     public static void generateBoard(int startY, int startX){
-		//initalise random and define boundaries for all arrays (except button)
+		//initalise random and define boundaries for board
 		Random random = new Random();
         board = new char[height][width];
 
