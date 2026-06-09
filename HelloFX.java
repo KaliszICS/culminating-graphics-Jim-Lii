@@ -125,7 +125,7 @@ public class HelloFX extends Application {
         StackPane.setMargin(text2, new Insets(230, 140, 150, 310));
         StackPane.setAlignment(text2, Pos.CENTER);
 
-        //set proceed button actions
+        //set proceed button actions, basically just shows the next screen assets
         proceedButton.setOnAction(e -> {
             text.setText("Input width (4 to 40):\nInput height (4 to 40):\n");
             text.setText(text.getText() + "Input mines:\n(minimum 1, max \n# of tiles - 9)");
@@ -137,7 +137,7 @@ public class HelloFX extends Application {
             submitButton.setVisible(true);
         });
 
-        //set submit button actions
+        //set submit button actions (hides everything, then starts the game, with validation)
         submitButton.setOnAction(e -> {
 			//error messages
             if (minesField.getText().isEmpty()){
@@ -183,12 +183,12 @@ public class HelloFX extends Application {
                 int row = i;
                 int col = j;
                 Button tile = new Button("?");
-                tile.setFont(new Font("Arial", 20)); //button style
-                tile.setPrefSize(30, 30);
-                tile.setMinSize(30, 30);
+                tile.setFont(new Font("Arial", 20)); //font
+                tile.setPrefSize(30, 30); //size
+                tile.setMinSize(30, 30); //fixes size
                 tile.setMaxSize(30, 30);
-                tile.setStyle("-fx-padding: 0;");
-                tile.setFocusTraversable(false);
+                tile.setStyle("-fx-padding: 0;"); //remove padding
+                tile.setFocusTraversable(false); //removes blue outline
                 tile.setOnMouseClicked(e -> {
                     if (e.getButton() == MouseButton.PRIMARY){ //left click
                         reveal(row, col);
@@ -214,9 +214,9 @@ public class HelloFX extends Application {
             flagged = new boolean[height][width];
             board = null;
 
-            startGame(stage);
+            startGame(stage); //restart game with same parameters
         });
-        restartButton.setVisible(false);
+        restartButton.setVisible(false); //hide and align
         StackPane.setAlignment(restartButton, Pos.TOP_RIGHT);
         StackPane.setMargin(restartButton, new Insets(15, 15, 15, 15));
     
@@ -301,10 +301,7 @@ public class HelloFX extends Application {
         if (num == '7'){ //this is useless but whatever
             return Color.BLACK;
         }
-        if (num == '8'){
-            return Color.GRAY;
-        }
-        return Color.BLACK;
+        return Color.GRAY; //for '8'
     }
 
     //method generates board (I basically copied this from my text version)
@@ -377,14 +374,14 @@ public class HelloFX extends Application {
         if (revealed[row][col]){
             return;
         }
-        if (!flagged[row][col]){
+        if (!flagged[row][col]){ //unflagged
             tiles[row][col].setText("F");
             tiles[row][col].setTextFill(Color.RED);
             flags++;
             text3.setText("Flags left: " + (mines - flags));
             flagged[row][col] = true;
         }
-        else {
+        else { //flagged
             tiles[row][col].setText("?");
             tiles[row][col].setTextFill(Color.BLACK);
             flags--;
@@ -417,7 +414,7 @@ public class HelloFX extends Application {
             text3.setText("You lose!");
         }
 
-        //restart button (restarts game with same parameters)
+        //restart button (restarts game with same size and mines)
         restartButton.setVisible(true);
     }
 
