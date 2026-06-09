@@ -2,7 +2,7 @@
 Title: Minesweeper - Graphic Culminating Assignment
 Author: Jim Li
 Date Created: Jun 2, 2026
-Date Last Modified: Jun 8, 2026
+Date Last Modified: Jun 9, 2026
  */
 
 import java.util.Random;
@@ -24,20 +24,20 @@ import javafx.scene.input.MouseButton;
 
 public class HelloFX extends Application {
     //game variables, public because they go through methods a lot
-    //these are static because problems told me so
-    public static int width;
-    public static int height;
-    public static int mines;
+    public int width;
+    public int height;
+    public int mines;
 
-    public static char[][] board;
-    public static boolean firstReveal = true;
-    public static boolean[][] revealed;
-    public static boolean[][] flagged;
-    public static int flags = 0;
-    public static int revealedTiles;
-    public static Button[][] tiles;
+    public char[][] board;
+    public boolean firstReveal = true;
+    public boolean[][] revealed;
+    public boolean[][] flagged;
+    public int flags = 0;
+    public int revealedTiles;
+    public Button[][] tiles;
 
-    public static Label text3;
+    public Label text3;
+    public Button restartButton;
 
     @Override
     //start menu
@@ -201,12 +201,31 @@ public class HelloFX extends Application {
                 grid.add(tile, col, row);
             }
         }
-        game.getChildren().addAll(grid, text3);
+
+        //restart button and actions
+        restartButton = new Button("RESTART");
+        restartButton.setOnAction(e -> {
+            //reset the global variables (not board size and mines)
+            firstReveal = true;
+            flags = 0;
+            revealedTiles = 0;
+
+            revealed = new boolean[height][width];
+            flagged = new boolean[height][width];
+            board = null;
+
+            startGame(stage);
+        });
+        restartButton.setVisible(false);
+        StackPane.setAlignment(restartButton, Pos.TOP_RIGHT);
+        StackPane.setMargin(restartButton, new Insets(15, 15, 15, 15));
+    
+        game.getChildren().addAll(grid, text3, restartButton);
         return game;
     }
 
     //method reveals tile, along with automatic clearing and win/loss check
-    public static void reveal(int row, int col){
+    public void reveal(int row, int col){
         if (row < 0 || row >= height || col < 0 || col >= width){
             return; //boundary check for automatic clearing
         }
@@ -234,7 +253,11 @@ public class HelloFX extends Application {
             tiles[row][col].setText("");
         }
         else {
-            tiles[row][col].setText("" + board[row][col]);
+            tiles[row][col].setText("" + board[row][col]); //reveal tile
+            //number colouring if a number is revealed
+            if (board[row][col] > '0' && board[row][col] < '9'){
+                tiles[row][col].setTextFill(colourTile(board[row][col]));
+            }
         }
 
         //automatic clearing through recursion
@@ -255,8 +278,37 @@ public class HelloFX extends Application {
         }
     }
 
+    //tile colouring
+    public Color colourTile(char num){
+        if (num == '1'){
+            return Color.BLUE;
+        }
+        if (num == '2'){
+            return Color.GREEN;
+        }
+        if (num == '3'){
+            return Color.RED;
+        }
+        if (num == '4'){
+            return Color.DARKBLUE;
+        }
+        if (num == '5'){
+            return Color.DARKRED;
+        }
+        if (num == '6'){
+            return Color.TURQUOISE;
+        }
+        if (num == '7'){ //this is useless but whatever
+            return Color.BLACK;
+        }
+        if (num == '8'){
+            return Color.GRAY;
+        }
+        return Color.BLACK;
+    }
+
     //method generates board (I basically copied this from my text version)
-    public static void generateBoard(int startY, int startX){
+    public void generateBoard(int startY, int startX){
 		//initalise random and define boundaries for board
 		Random random = new Random();
         board = new char[height][width];
@@ -286,7 +338,7 @@ public class HelloFX extends Application {
     }
 
     //method counts numbers of mines surrounding a non-mine tile (for generateBoard())
-	public static char findMines(int row, int col){
+	public char findMines(int row, int col){
 		if (board[row][col] == '0'){ //if selected tile is 0
 			char counter = '0';
 			//first if: checks if index is out of bounds
@@ -321,18 +373,20 @@ public class HelloFX extends Application {
     }
 
     //method toggles flag on the tile
-    public static void flag(int row, int col){
+    public void flag(int row, int col){
         if (revealed[row][col]){
             return;
         }
         if (!flagged[row][col]){
             tiles[row][col].setText("F");
+            tiles[row][col].setTextFill(Color.RED);
             flags++;
             text3.setText("Flags left: " + (mines - flags));
             flagged[row][col] = true;
         }
         else {
             tiles[row][col].setText("?");
+            tiles[row][col].setTextFill(Color.BLACK);
             flags--;
             text3.setText("Flags left: " + (mines - flags));
             flagged[row][col] = false;
@@ -340,13 +394,18 @@ public class HelloFX extends Application {
     }
 
     //method for when game ends 
-    public static void endGame(boolean win){
+    public void endGame(boolean win){
         //reveal mines
         for (int row = 0; row < height; row++){
             for (int col = 0; col < width; col++){
-                if (board[row][col] == 'M'){
-                    tiles[row][col].setText("M");
+                if (flagged[row][col] && board[row][col] != 'M'){ //incorrect flags
+                    tiles[row][col].setText("X");
                 }
+                else if (board[row][col] == 'M'){
+                    tiles[row][col].setText("M");
+                    tiles[row][col].setTextFill(Color.BLACK);
+                } //disable the board so you can't just win after losing
+                tiles[row][col].setDisable(true);
             }
         }
 
@@ -357,6 +416,9 @@ public class HelloFX extends Application {
         else {
             text3.setText("You lose!");
         }
+
+        //restart button (restarts game with same parameters)
+        restartButton.setVisible(true);
     }
 
     public static void main(String[] args) {
