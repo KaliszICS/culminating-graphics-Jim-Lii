@@ -2,7 +2,7 @@
 Title: Minesweeper - Graphic Culminating Assignment
 Author: Jim Li
 Date Created: Jun 2, 2026
-Date Last Modified: Jun 9, 2026
+Date Last Modified: Jun 10, 2026
  */
 
 import java.util.Random;
@@ -375,7 +375,7 @@ public class HelloFX extends Application {
             return;
         }
         if (!flagged[row][col]){ //unflagged
-            tiles[row][col].setText("F");
+            tiles[row][col].setText("⚑");
             tiles[row][col].setTextFill(Color.RED);
             flags++;
             text3.setText("Flags left: " + (mines - flags));
@@ -399,7 +399,7 @@ public class HelloFX extends Application {
                     tiles[row][col].setText("X");
                 }
                 else if (board[row][col] == 'M'){
-                    tiles[row][col].setText("M");
+                    tiles[row][col].setText("💣");
                     tiles[row][col].setTextFill(Color.BLACK);
                 } //disable the board so you can't just win after losing
                 tiles[row][col].setDisable(true);
